@@ -29,6 +29,7 @@ restart:
 
 test:
 	cd bot && python3 -m pytest -q
+	python3 -m pytest -q tests
 
 push:           ## push using the repo-scoped deploy key (no password)
 	GIT_SSH_COMMAND="$(GIT_SSH)" git push origin HEAD

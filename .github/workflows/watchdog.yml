@@ -1,0 +1,24 @@
+name: watchdog
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # private repo: ~1440 min/month, fits the 2000 free minutes
+  workflow_dispatch:
+concurrency: { group: watchdog, cancel-in-progress: false }
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: scripts/watchdog.py, sparse-checkout-cone-mode: false }
+      - uses: actions/cache/restore@v4
+        with: { path: .watchdog, key: watchdog-${{ github.run_id }}, restore-keys: watchdog- }
+      - run: python3 scripts/watchdog.py
+        env:
+          VPN_HOST: ${{ secrets.VPN_HOST }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+      - uses: actions/cache/save@v4
+        if: always()
+        with: { path: .watchdog, key: watchdog-${{ github.run_id }} }
