@@ -1,0 +1,13 @@
+# Project-local SSH config: `ssh -F ssh_config vpn` (used by Makefile).
+# Paths are relative to the repo root — always run from there.
+Host vpn
+    HostName 46.62.140.16
+    User root
+    IdentityFile .secrets/vpn_ed25519
+    IdentitiesOnly yes
+    UserKnownHostsFile .secrets/known_hosts
+    StrictHostKeyChecking yes
+    ServerAliveInterval 30
+    ControlMaster auto
+    ControlPath /tmp/vpn-service-%C
+    ControlPersist 5m
