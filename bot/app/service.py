@@ -61,10 +61,13 @@ class VpnService:
 
     async def checks(self) -> list[Check]:
         state = await self.docker.container_state(self.s.xray_container)
-        port = await metrics.tcp_ms("127.0.0.1", 443)
+        ports = []
+        for p in self.s.profiles:
+            ms = await metrics.tcp_ms("127.0.0.1", p.port)
+            ports.append(Check(f"порт {p.port}", ms is not None, f"{ms} мс" if ms is not None else "не отвечает"))
         return [
             Check("xray", state == "running", state),
-            Check("порт 443", port is not None, f"{port} мс" if port is not None else "не отвечает"),
+            *ports,
             await metrics.https_check(f"https://{self.s.sub_domain}/"),
             await metrics.latency_check([("1.1.1.1", 443), ("8.8.8.8", 443), ("ya.ru", 443)], self.s.latency_ms_max),
             metrics.disk_check("/"),

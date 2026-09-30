@@ -19,7 +19,8 @@ def main(argv: list[str]) -> int:
         u = store.add(args[0])
         render_xray_config(s)
         print(f"sub:   {s.sub_url(u.sub_token)}")
-        print(f"vless: {vless_link(u, s.reality, s.public_ip, s.profile_title)}")
+        for p in s.profiles:
+            print(f"vless: {vless_link(u, s.reality, p, s.public_ip)}")
     elif cmd == "revoke" and args:
         if not store.revoke(args[0]):
             print("not found")

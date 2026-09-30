@@ -12,7 +12,7 @@ from .xray_config import build_config
 
 
 def render_xray_config(s: Settings) -> Path:
-    cfg = build_config(UserStore(s.users_path).list(), s.reality)
+    cfg = build_config(UserStore(s.users_path).list(), s.reality, list(s.profiles))
     out = s.data_dir / "xray" / "config.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=out.parent, suffix=".tmp")

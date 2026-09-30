@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
-from .xray_config import Reality
+from .xray_config import Profile, Reality
 
 
 @dataclass(frozen=True)
@@ -14,6 +14,7 @@ class Settings:
     admin_ids: frozenset[int]
     public_ip: str
     reality: Reality
+    profiles: tuple[Profile, ...]
     data_dir: Path
     profile_title: str = "🇫🇮 TimVPN"
     latency_ms_max: float = 150
@@ -45,11 +46,24 @@ class Settings:
                 private_key=e["REALITY_PRIVATE_KEY"],
                 public_key=e["REALITY_PUBLIC_KEY"],
                 short_id=e["REALITY_SHORT_ID"],
-                server_name=domain,
             ),
+            profiles=_profiles(e, domain),
             data_dir=Path(e.get("DATA_DIR", "/data")),
             profile_title=e.get("PROFILE_TITLE", "🇫🇮 TimVPN"),
             latency_ms_max=float(e.get("LATENCY_MS_MAX", 150)),
             check_interval_s=int(e.get("CHECK_INTERVAL_S", 60)),
             hcloud_token=e.get("HCLOUD_TOKEN", ""),
         )
+
+
+def _profiles(e: Mapping[str, str], domain: str) -> tuple[Profile, ...]:
+    alt = e.get("ALT_SNI", "vk.com")
+    local = "127.0.0.1:8443"  # Caddy with a real cert for `domain` (self-steal)
+    available = {
+        "tcp": Profile("vless-tcp", "🇫🇮 Финляндия", 443, domain, local),
+        "xhttp": Profile("vless-xhttp", "🇫🇮 Финляндия XHTTP", 2053, domain, local,
+                         network="xhttp", path=e.get("XHTTP_PATH", "/api/v2/stream")),
+        "alt": Profile("vless-alt", "🇫🇮 Финляндия ALT", 2083, alt, f"{alt}:443"),
+    }
+    names = [n.strip() for n in e.get("PROFILES", "tcp,xhttp,alt").split(",") if n.strip()]
+    return tuple(available[n] for n in names)

@@ -13,7 +13,7 @@ def make_sub_app(s: Settings, store: UserStore) -> web.Application:
         user = store.by_token(request.match_info["token"])
         if user is None:
             raise web.HTTPNotFound(text="not found")
-        body = subscription_body(user, s.reality, s.public_ip, s.profile_title)
+        body = subscription_body(user, s.reality, list(s.profiles), s.public_ip)
         headers = subscription_headers(s.profile_title, update_hours=12)
         return web.Response(text=body, headers=headers, content_type="text/plain")
 

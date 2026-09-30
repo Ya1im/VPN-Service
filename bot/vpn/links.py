@@ -5,25 +5,28 @@ import base64
 from urllib.parse import quote, urlencode
 
 from .models import User
-from .xray_config import FLOW, Reality
+from .xray_config import Profile, Reality
 
 
-def vless_link(user: User, reality: Reality, host: str, label: str, port: int = 443) -> str:
-    query = urlencode({
-        "encryption": "none",
-        "flow": FLOW,
+def vless_link(user: User, reality: Reality, profile: Profile, host: str) -> str:
+    params = {"encryption": "none"}
+    if profile.flow:
+        params["flow"] = profile.flow
+    params.update({
         "security": "reality",
-        "sni": reality.server_name,
+        "sni": profile.server_name,
         "fp": "chrome",
         "pbk": reality.public_key,
         "sid": reality.short_id,
-        "type": "tcp",
+        "type": profile.network,
     })
-    return f"vless://{user.uuid}@{host}:{port}?{query}#{quote(label)}"
+    if profile.network == "xhttp":
+        params.update({"path": profile.path, "mode": "auto"})
+    return f"vless://{user.uuid}@{host}:{profile.port}?{urlencode(params)}#{quote(profile.label)}"
 
 
-def subscription_body(user: User, reality: Reality, host: str, label: str) -> str:
-    links = [vless_link(user, reality, host, label)]
+def subscription_body(user: User, reality: Reality, profiles: list[Profile], host: str) -> str:
+    links = [vless_link(user, reality, p, host) for p in profiles]
     return base64.b64encode("\n".join(links).encode()).decode()
 
 

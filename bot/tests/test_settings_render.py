@@ -17,7 +17,12 @@ def test_settings_from_env_defaults():
     assert s.admin_ids == {111, 222}
     assert s.sub_domain == "46-62-140-16.sslip.io"
     assert s.sub_url("tok") == "https://46-62-140-16.sslip.io/sub/tok"
-    assert s.reality.server_name == "46-62-140-16.sslip.io"
+    assert [(p.tag, p.port, p.server_name) for p in s.profiles] == [
+        ("vless-tcp", 443, "46-62-140-16.sslip.io"),
+        ("vless-xhttp", 2053, "46-62-140-16.sslip.io"),
+        ("vless-alt", 2083, "vk.com"),
+    ]
+    assert s.profiles[2].dest == "vk.com:443"
     assert s.latency_ms_max == 150
 
 
@@ -33,3 +38,10 @@ def test_render_writes_config(tmp_path):
     cfg = json.loads(path.read_text())
     assert path == tmp_path / "xray" / "config.json"
     assert cfg["inbounds"][0]["settings"]["clients"][0]["email"] == "mom"
+
+
+def test_profiles_selectable_via_env():
+    s = Settings.from_env({**ENV, "PROFILES": "tcp", "ALT_SNI": "ya.ru"})
+    assert [p.tag for p in s.profiles] == ["vless-tcp"]
+    s = Settings.from_env({**ENV, "PROFILES": "alt", "ALT_SNI": "ya.ru"})
+    assert s.profiles[0].server_name == "ya.ru" and s.profiles[0].dest == "ya.ru:443"

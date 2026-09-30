@@ -36,10 +36,12 @@ if ! swapon --show | grep -q .; then
   grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
 fi
 
-echo "== firewall (22, 80, 443)"
+echo "== firewall (22, 80, 443, 2053, 2083)"
 ufw allow 22/tcp  >/dev/null
 ufw allow 80/tcp  >/dev/null
 ufw allow 443/tcp >/dev/null
+ufw allow 2053/tcp >/dev/null  # vless xhttp
+ufw allow 2083/tcp >/dev/null  # vless alt sni
 ufw default deny incoming  >/dev/null
 ufw default allow outgoing >/dev/null
 ufw --force enable >/dev/null
