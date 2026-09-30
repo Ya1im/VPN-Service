@@ -20,9 +20,7 @@ def test_settings_from_env_defaults():
     assert [(p.tag, p.port, p.server_name) for p in s.profiles] == [
         ("vless-tcp", 443, "46-62-140-16.sslip.io"),
         ("vless-xhttp", 2053, "46-62-140-16.sslip.io"),
-        ("vless-alt", 2083, "vk.com"),
-    ]
-    assert s.profiles[2].dest == "vk.com:443"
+    ]  # "alt" (foreign IP + vk.com SNI) is opt-in: it failed on mobile networks
     assert s.latency_ms_max == 150
 
 

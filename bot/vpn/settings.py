@@ -65,5 +65,5 @@ def _profiles(e: Mapping[str, str], domain: str) -> tuple[Profile, ...]:
                          network="xhttp", path=e.get("XHTTP_PATH", "/api/v2/stream")),
         "alt": Profile("vless-alt", "🇫🇮 Финляндия ALT", 2083, alt, f"{alt}:443"),
     }
-    names = [n.strip() for n in e.get("PROFILES", "tcp,xhttp,alt").split(",") if n.strip()]
+    names = [n.strip() for n in e.get("PROFILES", "tcp,xhttp").split(",") if n.strip()]
     return tuple(available[n] for n in names)
