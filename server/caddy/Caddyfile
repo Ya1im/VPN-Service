@@ -1,0 +1,27 @@
+{
+	# Xray owns :443 and forwards non-Reality TLS here (self-steal).
+	https_port 8443
+	auto_https disable_redirects
+}
+
+# ACME HTTP-01 + redirect to the public 443
+http://{$SUB_DOMAIN} {
+	redir https://{host}{uri} permanent
+}
+
+https://{$SUB_DOMAIN} {
+	bind 127.0.0.1
+	encode gzip
+
+	handle /sub/* {
+		reverse_proxy 127.0.0.1:8080
+	}
+	handle {
+		root * /srv/site
+		file_server
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+}

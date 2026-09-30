@@ -1,0 +1,53 @@
+name: vpn-service
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  xray:
+    image: ghcr.io/xtls/xray-core:26.3.27
+    container_name: vpn-xray
+    command: ["run", "-c", "/etc/xray/config.json"]
+    network_mode: host
+    restart: unless-stopped
+    # host network + port 443: run as root but with only the bind capability
+    user: "0:0"
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+    volumes:
+      - ./data/xray:/etc/xray:ro
+    logging: *logging
+
+  caddy:
+    image: caddy:2.11
+    container_name: vpn-caddy
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      SUB_DOMAIN: ${SUB_DOMAIN}
+    volumes:
+      - ./server/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./server/caddy/site:/srv/site:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging: *logging
+
+  bot:
+    build: ./bot
+    container_name: vpn-bot
+    network_mode: host
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+    volumes:
+      - ./data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    logging: *logging
+
+volumes:
+  caddy_data:
+  caddy_config:
